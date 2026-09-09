@@ -22,6 +22,10 @@ private credentials, device identifiers, firmware backups or unrelated files.
 Follow the [README](README.md) for installation. From the project root:
 
 ```sh
+npm ci
+npm run check:site
+npm run build
+npm run test:site
 npm run check
 npm run test:web
 python3 scripts/test-sdk.py
@@ -46,7 +50,9 @@ changing their shared dependencies.
 - Keep animation/rendering allocation-free. The application owns the pixel buffer.
 - Validate public inputs and preserve the documented failure behavior.
 - Put board-specific GPIO, display and touch code in an adapter package.
-- Keep the browser reference dependency-free unless a concrete need justifies a change.
+- Use the existing Astro, React, and shadcn/ui structure in `site/`; keep the legacy `web/` demo dependency-free.
+- Update canonical SDK guides at their source; the website imports them during its build.
+- Check website changes in both themes, with reduced motion, keyboard input, and a mobile viewport.
 - Follow nearby formatting and naming; avoid unrelated formatting changes.
 - Explain buffer ownership, units and task/thread constraints in API documentation.
 - Include license information for any new code, artwork, fonts or dependencies.

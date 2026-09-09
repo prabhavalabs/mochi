@@ -7,7 +7,7 @@
 The original cream-colored **Mochi** is the project's mascot and brand mark.
 See the [brand assets](docs/brand/README.md) for the master artwork and repository cover.
 
-The core runs without Arduino, a graphics framework, network access, or an account. The included adapter brings it to the **Waveshare ESP32-S3-Touch-AMOLED-2.16**. A separate browser playground lets you try the original Mochi without hardware.
+The core runs without Arduino, a graphics framework, network access, or an account. The included adapter brings it to the **Waveshare ESP32-S3-Touch-AMOLED-2.16**. The [browser playground and documentation](https://mochi-sdk.pages.dev) let you explore all four characters without hardware.
 
 **Version 0.3.0.** This is an early SDK: source compatibility may change before 1.0. Packages are consumed from this repository and are not yet published to a package registry.
 
@@ -45,21 +45,42 @@ cd mochi
 
 | Goal | Requirements |
 | --- | --- |
-| Browser preview | Node.js 22+ and a modern browser |
+| Browser preview | Node.js 22.12+ and a modern browser |
 | Portable SDK | CMake 3.16+ and a C++17 compiler |
 | Touchscreen demo | Supported Waveshare board, USB data cable, PlatformIO |
 
 ### Browser preview — no board required
 
 ```sh
+npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:4173**. No `npm install` is needed: the server uses Node's standard library. It binds to the local computer. The page has no external assets, analytics or network dependencies.
+Open **http://127.0.0.1:4321**. The Astro portal includes all four companions,
+ten animation states, local documentation search, and light/dark themes that follow
+your system. Character selection changes the name, personality, accent colors,
+and subtle browser motion pace, and persists across documentation pages.
 
-Select a mood, tap to blink, swipe or use arrow keys to switch moods, and try pause, speed, tour or fullscreen. Reduced-motion preferences start the preview paused; pressing Play enables motion. On macOS/Linux, `PORT=4174 npm run dev` chooses another port.
+Tap to blink, swipe to change states, or use the keyboard-accessible controls.
+Reduced-motion settings start the preview paused; Play enables animation.
+Speaking is visual only. The browser does not communicate with the board and is
+not a packaged React SDK.
 
-The browser is a separate JavaScript reference showing **Mochi only**. It does not communicate with the board and is not a React package. The C++ SDK and firmware contain the full cast.
+```sh
+npm run check:site
+npm run build
+npm run test:site
+npm run preview
+```
+
+The production site is deployed to [Cloudflare Pages](https://mochi-sdk.pages.dev).
+See [website maintenance](site/src/content/docs/website.md) and
+[deployment](site/src/content/docs/deployment.md) for content authoring, components,
+characters, themes, validation, and custom-domain settings. Fonts and assets are
+self-hosted; no analytics or account is required.
+
+The original dependency-free Mochi demo remains in `web/`. Use
+`npm run dev:legacy` to serve it at port 4173 without installing dependencies.
 
 ### Portable SDK — no Arduino required
 
@@ -277,6 +298,10 @@ Selecting a different character loads its default palette; apply custom colors a
 ## Development and tests
 
 ```sh
+npm ci
+npm run check:site
+npm run build
+npm run test:site
 npm run check
 npm run test:web
 python3 scripts/test-sdk.py
@@ -296,7 +321,8 @@ sdk/Mochi/                 Portable C++17 SDK, examples and tests
 sdk/MochiWaveshare216/      Board adapter and dependency notices
 firmware/                  PlatformIO application and native checks
 examples/                  Independent embedded application integrations
-web/                       Browser reference for original Mochi
+site/                      Astro documentation and four-character playground
+web/                       Legacy dependency-free reference for original Mochi
 scripts/                   Local server and sanitizer runner
 tests/                     Server regression tests
 docs/                      Screenshots, integration and porting guides

@@ -1,0 +1,7 @@
+dist/
+.astro/
+.wrangler/
+src/content/docs/generated/
+public/brand/
+public/media/
+public/licenses/

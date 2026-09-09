@@ -1,0 +1,90 @@
+---
+import Base from '@/layouts/Base.astro';
+import Playground from '@/components/Playground';
+import { Code } from 'astro:components';
+const example = `mochi::Mascot buddy;
+buddy.setState(mochi::State::Idle);
+
+// When something wonderful happens…
+buddy.trigger(mochi::State::Happy, 1.5f);`;
+---
+
+<Base title="A little company. A lot of personality.">
+  <main id="main-content" class="landing">
+    <Playground client:load />
+    <section class="integration-preview">
+      <div>
+        <p class="eyebrow">A companion, wherever you need one</p>
+        <h2>
+          Small code.
+          <br />
+          <em>A little life.</em>
+        </h2>
+        <p>
+          An allocation-free C++17 core. Your buffer, your timing, your screen. Add a companion to
+          the program you’re already building, and let it react whenever the moment calls for it.
+        </p>
+        <a class="text-link" href="/docs/integration/">
+          Read the integration guide <span>→</span>
+        </a>
+      </div>
+      <div class="example-code">
+        <div class="code-label">
+          <span>your-application.cpp</span>
+          <span>C++17</span>
+        </div>
+        <Code code={example} lang="cpp" theme="github-dark" />
+        <div class="code-caption">
+          <span>One instance. A whole personality.</span>
+          <span>♡</span>
+        </div>
+      </div>
+    </section>
+    <section class="explore-section">
+      <p class="eyebrow">The field guide</p>
+      <h2>Make yourself at home.</h2>
+      <div class="explore-columns">
+        {[
+          {
+            title: 'Start here',
+            description: 'A friendly first step.',
+            links: [
+              ['Installation', 'installation'],
+              ['Your first character', 'first-character'],
+              ['Playground guide', 'playground'],
+            ],
+          },
+          {
+            title: 'Build something',
+            description: 'From an idea to a little screen.',
+            links: [
+              ['SDK reference', 'api-reference'],
+              ['Application integration', 'integration'],
+              ['Hardware & flashing', 'waveshare'],
+            ],
+          },
+          {
+            title: 'Make it yours',
+            description: 'There’s room for your personality.',
+            links: [
+              ['Characters & palettes', 'characters'],
+              ['Porting to a new display', 'porting'],
+              ['Contributing', 'contributing'],
+            ],
+          },
+        ].map((group) => (
+          <div>
+            <h3>{group.title}</h3>
+            <p>{group.description}</p>
+            {group.links.map(([name, slug]) => (
+              <a href={`/docs/${slug}/`}>
+                {name}
+                <span>→</span>
+              </a>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  </main>
+</Base>

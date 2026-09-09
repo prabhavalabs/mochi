@@ -28,6 +28,16 @@ firmware binaries, preserve required notices and meet applicable source/relinkin
 requirements for included libraries. The MIT license on Mochi does not relicense
 the Arduino framework or its components.
 
-The browser uses platform fonts and standard web APIs. It does not bundle or
-download third-party fonts. The screenshots in `docs/images/` are rendered from
-the project's own character code and contain no device identifiers.
+## Website
+
+The Astro portal uses Astro, React, Tailwind CSS, Radix UI, shadcn/ui component
+source, cmdk, and their dependencies under their respective upstream licenses.
+The lockfile records exact installed versions. The shadcn/ui MIT notice is retained in
+`site/public/licenses/shadcn.txt`. Lucide icons use the ISC license.
+DM Sans and Lora font files are bundled through Fontsource under the SIL Open
+Font License 1.1; the retained font notices are in `site/public/licenses/` and
+ship with the static site. The original `web/` demo still uses platform fonts.
+
+The screenshots in `docs/images/` are rendered from the project's own character
+code and contain no device identifiers. Mochi character artwork remains covered
+by the project's MIT license.

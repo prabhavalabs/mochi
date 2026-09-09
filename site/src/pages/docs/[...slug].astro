@@ -1,0 +1,83 @@
+---
+import { render } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import { getDocs, getNavigation } from '@/lib/docs';
+import { SearchDocs, NavLinks } from '@/components/SiteControls';
+import { Companion } from '@/components/Playground';
+export async function getStaticPaths() {
+  return (await getDocs()).map((entry) => ({
+    params: { slug: entry.data.slug },
+    props: { entry },
+  }));
+}
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const docs = await getDocs(),
+  nav = await getNavigation();
+const index = docs.findIndex((d) => d.data.slug === entry.data.slug);
+const previous = docs[index - 1],
+  next = docs[index + 1];
+const source = entry.data.source || `site/src/content/docs/${entry.data.slug}.md`;
+---
+
+<Base title={entry.data.title} description={entry.data.description} current={entry.data.slug}>
+  <div class="docs-shell">
+    <div class="docs-search">
+      <SearchDocs client:load />
+    </div>
+    <aside class="docs-sidebar">
+      <nav aria-label="Documentation">
+        <NavLinks entries={nav} current={entry.data.slug} />
+      </nav>
+      <p class="sidebar-note">
+        Mochi 0.3.0
+        <br />A little life for your screen.
+      </p>
+    </aside>
+    <main id="main-content" class="doc-main">
+      <div class="breadcrumb">
+        <a href="/docs/introduction/">Documentation</a>
+        <span>/</span>
+        <span>{entry.data.group}</span>
+      </div>
+      <h1>
+        {entry.data.slug === 'introduction' ? 'A little life for your screen.' : entry.data.title}
+      </h1>
+      <p class="doc-lede">{entry.data.description}</p>
+      {entry.data.slug === 'introduction' && <Companion client:load callout />}
+      <article class:list={['prose', { 'intro-copy': entry.data.slug === 'introduction' }]}>
+        <Content />
+      </article>
+      <a class="edit-link" href={`https://github.com/prabhavalabs/mochi/edit/main/${source}`}>
+        Improve this page on GitHub ↗
+      </a>
+      <nav class="doc-pagination" aria-label="Guide pagination">
+        {previous ? (
+          <a href={`/docs/${previous.data.slug}/`}>
+            <span>← Previous</span>
+            <strong>{previous.data.title}</strong>
+          </a>
+        ) : (
+          <div />
+        )}
+        {next && (
+          <a href={`/docs/${next.data.slug}/`}>
+            <span>Next →</span>
+            <strong>{next.data.title}</strong>
+          </a>
+        )}
+      </nav>
+    </main>
+    <aside class="docs-toc">
+      <nav aria-label="On this page">
+        <h2>On this page</h2>
+        {headings
+          .filter((h) => h.depth === 2)
+          .map((h) => (
+            <a href={`#${h.slug}`}>{h.text}</a>
+          ))}
+      </nav>
+      <Companion client:load />
+    </aside>
+  </div>
+</Base>

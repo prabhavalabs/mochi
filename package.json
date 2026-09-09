@@ -4,11 +4,17 @@
   "version": "0.3.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/serve.mjs",
+    "dev": "npm run dev --workspace @mochi/website",
     "check": "node --check web/app.js && node --check web/mochi.js && node --check scripts/serve.mjs",
     "test:sdk": "python3 scripts/test-sdk.py",
     "test:web": "node --test tests/server.test.mjs",
-    "test:install": "python3 scripts/test-install.py"
+    "test:install": "python3 scripts/test-install.py",
+    "build": "npm run build --workspace @mochi/website",
+    "preview": "npm run preview --workspace @mochi/website",
+    "check:site": "npm run check --workspace @mochi/website",
+    "dev:legacy": "node scripts/serve.mjs",
+    "deploy": "npm run deploy --workspace @mochi/website",
+    "test:site": "node --test site/tests/*.test.mjs && node site/scripts/check-site.mjs"
   },
   "license": "MIT",
   "description": "Offline mascot playground and portable C++ animation SDK",
@@ -18,5 +24,13 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "workspaces": [
+    "site"
+  ],
+  "overrides": {
+    "miniflare": {
+      "sharp": "0.35.4"
+    }
   }
 }
