@@ -1,8 +1,11 @@
 # Mochi
 
+![Mochi — the original cream-colored companion waving hello](docs/brand/repository-cover.jpg)
+
 **Little characters for little screens.** Mochi is an open-source C++17 animation SDK and a touchscreen playground for embedded displays. Give a character a mood, advance its animation, and draw it into an RGB565 framebuffer.
 
-![Mochi, Sprout, Peach and Nimbus waving](docs/images/characters.png)
+The original cream-colored **Mochi** is the project's mascot and brand mark.
+See the [brand assets](docs/brand/README.md) for the master artwork and repository cover.
 
 The core runs without Arduino, a graphics framework, network access, or an account. The included adapter brings it to the **Waveshare ESP32-S3-Touch-AMOLED-2.16**. A separate browser playground lets you try the original Mochi without hardware.
 
@@ -11,6 +14,8 @@ The core runs without Arduino, a graphics framework, network access, or an accou
 [Quick start](#quick-start) · [Hardware setup](#run-on-the-waveshare-board) · [Integration guide](docs/INTEGRATION.md) · [API guide](sdk/Mochi/README.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Features and characters
+
+![Mochi, Sprout, Peach and Nimbus waving](docs/images/characters.png)
 
 - Four procedural characters with distinct silhouettes and editable colors.
 - Ten states: **Idle, Blinking, Happy, Listening, Thinking, Speaking, Sleeping, Surprised, Sad, Waving**.
