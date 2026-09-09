@@ -1,6 +1,7 @@
 #pragma once
 #include "mochi/Character.h"
 #include "mochi/Motion.h"
+#include "mochi/Surface.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -16,13 +17,6 @@ struct Palette {
 };
 // Unknown values return Mochi's palette; Renderer rejects invalid selections.
 Palette default_palette(Character character);
-// Non-owning RGB565 pixels in native uint16_t order. Capacity and stride are
-// measured in pixels, not bytes. A zero stride means tightly packed rows.
-struct Surface {
-  uint16_t* pixels = nullptr;
-  size_t capacity = 0;
-  int width = 0, height = 0, stride = 0;
-};
 struct Point { float x, y; };
 class Renderer {
  public:

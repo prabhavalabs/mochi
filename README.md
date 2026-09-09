@@ -6,9 +6,9 @@
 
 The core runs without Arduino, a graphics framework, network access, or an account. The included adapter brings it to the **Waveshare ESP32-S3-Touch-AMOLED-2.16**. A separate browser playground lets you try the original Mochi without hardware.
 
-**Version 0.2.0.** This is an early SDK: source compatibility may change before 1.0. Packages are consumed from this repository and are not yet published to a package registry.
+**Version 0.3.0.** This is an early SDK: source compatibility may change before 1.0. Packages are consumed from this repository and are not yet published to a package registry.
 
-[Quick start](#quick-start) · [Hardware setup](#run-on-the-waveshare-board) · [SDK usage](#use-the-sdk-in-your-project) · [API guide](sdk/Mochi/README.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Quick start](#quick-start) · [Hardware setup](#run-on-the-waveshare-board) · [Integration guide](docs/INTEGRATION.md) · [API guide](sdk/Mochi/README.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Features and characters
 
@@ -17,6 +17,8 @@ The core runs without Arduino, a graphics framework, network access, or an accou
 - Smooth transitions, independent eyes/hands/mouth, manual blinks, pause and speed controls.
 - Optional mouth movement driven by a normalized speech level from your application.
 - Allocation-free animation and rendering into an application-owned buffer.
+- Independent character instances, temporary reactions, and commands from application events.
+- Clipped widgets in existing screens, optional task queues, and small-buffer rendering.
 - Configurable tap/swipe recognition, including lost-release handling.
 - A touchscreen example with character and mood pickers, tour mode, and USB commands.
 
@@ -70,9 +72,11 @@ Render standalone images on macOS/Linux:
 ```sh
 ./build/sdk/mochi_offscreen build/mochi.ppm
 ./build/sdk/mochi_cast build/characters.ppm
+./build/sdk/mochi_application build/application.ppm
+./build/sdk/mochi_stripes build/stripes.ppm
 ```
 
-Visual Studio generators put executables under `build/sdk/Release/` with an `.exe` suffix. Open the output with a PPM-capable viewer or convert it to PNG. The cast example renders all four characters from the same pose.
+Visual Studio generators put executables under `build/sdk/Release/` with an `.exe` suffix. Open the output with a PPM-capable viewer or convert it to PNG. The cast example renders all four characters from the same pose. The application example embeds two independent widgets; the stripe example renders with only eight rows of pixel storage.
 
 ## Run on the Waveshare board
 
@@ -160,6 +164,8 @@ Send printable ASCII terminated by a newline at 115200 baud. CRLF is supported. 
 | `status` | JSON: version, display/touch/PMIC readiness, PSRAM, character, state, view, FPS and timing |
 | `character 0` … `character 3` | Mochi, Sprout, Peach, Nimbus |
 | `state 0` … `state 9` | Idle, Blinking, Happy, Listening, Thinking, Speaking, Sleeping, Surprised, Sad, Waving |
+| `trigger 2 1.5` | Happy for 1.5 animation seconds, then return to the selected base state; accepts any state number and duration in `(0, 86400]` |
+| `cancel` | End the temporary reaction and return to the base state |
 | `menu characters` / `menu moods` / `menu close` | Show or close a picker |
 | `tour on` / `tour off` | Enable/disable mood cycling |
 | `pause` / `play` | Freeze/resume animation |
@@ -170,7 +176,7 @@ The console also emits startup and selection messages: look for JSON lines when 
 
 | Package | Provides | Requires |
 | --- | --- | --- |
-| [`Mochi`](sdk/Mochi/README.md) | Characters, poses, playback, RGB565 renderer, palettes, gestures | C++17 standard library |
+| [`Mochi`](sdk/Mochi/README.md) | Character instances, timed reactions, commands, poses, RGB565 rendering, palettes, gestures | C++17 standard library |
 | [`MochiWaveshare216`](sdk/MochiWaveshare216/README.md) | Display, touch, power initialization and PSRAM framebuffer | Arduino-ESP32 and pinned drivers |
 
 For CMake:
@@ -179,6 +185,10 @@ For CMake:
 add_subdirectory(path/to/mochi/sdk/Mochi)
 target_link_libraries(your_application PRIVATE Mochi::Mochi)
 ```
+
+The core also supports installation with `cmake --install` and consumption with
+`find_package(Mochi 0.3 CONFIG REQUIRED)`. See the [integration guide](docs/INTEGRATION.md#install-the-sdk-independently)
+for a standalone installation that does not depend on this checkout.
 
 For PlatformIO, link a local clone and enable C++17:
 
@@ -199,23 +209,45 @@ Include both packages for the Waveshare adapter; its guide has a complete config
 // Keep the buffer in long-lived storage, not a small embedded task stack.
 constexpr int width = 320, height = 320;
 std::array<uint16_t, width * height> pixels{};
-mochi::Animator buddy;
-mochi::Renderer renderer({pixels.data(), pixels.size(), width, height});
+mochi::Mascot buddy;
+mochi::Surface screen{pixels.data(), pixels.size(), width, height};
 
 void setupCharacter() {
-    renderer.setCharacter(mochi::Character::Sprout);
+    buddy.setCharacter(mochi::Character::Sprout);
     buddy.setState(mochi::State::Thinking);
 }
 
 void frame(float elapsedSeconds) {
     buddy.update(elapsedSeconds);
-    renderer.clear();
-    renderer.draw(buddy.pose(), 160, 160, 0.8f);
+    mochi::Renderer(screen).clear();
+    buddy.draw(screen, 160, 160, 0.8f);
     // Present pixels with your display driver.
 }
 ```
 
 The core borrows your buffer and does not present it. Capacity and stride are in **pixels**; colors use native-endian `uint16_t` RGB565. A 320 × 320 buffer uses 204,800 bytes; the 480 × 480 board buffer uses 460,800 bytes of PSRAM.
+
+### Trigger it from your application
+
+Call these from the task that owns the character, whenever application events occur:
+
+```cpp
+buddy.setState(mochi::State::Idle);       // Normal activity.
+buddy.trigger(mochi::State::Happy, 1.5f); // React, then resume Idle.
+buddy.blink();
+```
+
+Create as many instances as your memory/frame budget allows. Each owns its character,
+colors, playback and reaction timer. A `sub_surface()` view keeps drawing inside a
+widget in your existing screen. No picker, global singleton, display driver or
+background task is required by the core.
+
+For events from another task, send `mochi::Command` values to the UI task. The optional
+`CommandQueue<N>` supports one producer and one consumer; an RTOS queue supports
+multiple producers. The [complete integration guide](docs/INTEGRATION.md) explains
+ownership, timing, visibility, small buffers and GUI integration. The
+[FreeRTOS application](examples/freertos_companion/README.md) demonstrates two widgets
+and worker events without the playground's controls.
 
 ### Playback and colors
 
@@ -230,7 +262,7 @@ buddy.clearSpeechLevel();              // Restore automatic mouth animation.
 
 auto colors = mochi::default_palette(mochi::Character::Sprout);
 colors.body = mochi::rgb565(0xB8E8D0);
-renderer.setPalette(colors);
+buddy.setPalette(colors);
 ```
 
 Pass elapsed **seconds** to `update()`. Each update consumes at most 100 ms before applying speed, preventing large jumps after stalls. Use a single animation/UI task; queue commands from other tasks.
@@ -243,12 +275,14 @@ Selecting a different character loads its default palette; apply custom colors a
 npm run check
 npm run test:web
 python3 scripts/test-sdk.py
+python3 scripts/test-install.py
 pio run --project-dir firmware
+pio run --project-dir examples/freertos_companion
 ```
 
-The sanitizer runner needs Python 3 and Clang on macOS/Linux; `CXX=g++` selects GCC where sanitizers are available. Windows users can use WSL or CMake/CTest. Tests cover transitions, callbacks, speech levels, character selection, all 40 character/state combinations, clipped buffers, gestures and malformed USB lines.
+The sanitizer runner needs Python 3 and Clang on macOS/Linux; `CXX=g++` selects GCC where sanitizers are available. Windows users can use WSL or CMake/CTest. Tests cover reactions, callbacks, speech levels, all 40 character/state combinations, clipped subviews, bounded queues, stripe rendering, gestures and malformed USB lines. The install test requires CMake and builds a separate consumer after relocating the installation and removing its original source/build directories.
 
-GitHub Actions runs portable checks on Linux/macOS, browser/server checks and a firmware build. These do not replace physical testing of orientation, touch, flashing or power. See [Contributing](CONTRIBUTING.md) for the hardware checklist.
+GitHub Actions runs portable and installed-package checks on Linux/macOS, browser/server checks, and both embedded application builds. These do not replace physical testing of orientation, touch, flashing or power. See [Contributing](CONTRIBUTING.md) for the hardware checklist.
 
 ### Project layout
 
@@ -256,10 +290,11 @@ GitHub Actions runs portable checks on Linux/macOS, browser/server checks and a 
 sdk/Mochi/                 Portable C++17 SDK, examples and tests
 sdk/MochiWaveshare216/      Board adapter and dependency notices
 firmware/                  PlatformIO application and native checks
+examples/                  Independent embedded application integrations
 web/                       Browser reference for original Mochi
 scripts/                   Local server and sanitizer runner
 tests/                     Server regression tests
-docs/                      Screenshots and porting guide
+docs/                      Screenshots, integration and porting guides
 ```
 
 Generated firmware, archives, local settings and device backups are not part of the source repository. Builds go under `firmware/.pio/` or your chosen CMake directory.
@@ -282,6 +317,7 @@ Generated firmware, archives, local settings and device backups are not part of 
 - Speaking/Listening are visual states. Audio, microphone capture, speech recognition and synthesis are not implemented.
 - The board has an IMU; this adapter does not yet expose motion reactions, RTC, SD card or audio devices.
 - Only the Waveshare 2.16-inch board has a tested hardware adapter. Other boards need integration work.
+- The core targets C++17/RGB565 applications. Other languages, pixel formats and GUI lifecycles need an integration layer; compiled libraries must match the target toolchain.
 - The example caps scheduling at 30 FPS. Actual performance depends on rendering and display transfer; idle measured approximately 18 FPS during development.
 - The SDK has no Wi-Fi/Bluetooth services, cloud integrations, persistent settings or over-the-air updates.
 

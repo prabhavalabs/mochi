@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+project(MochiConsumer LANGUAGES CXX)
+find_package(Mochi 0.3 CONFIG REQUIRED)
+add_executable(mochi_consumer main.cpp)
+target_link_libraries(mochi_consumer PRIVATE Mochi::Mochi)

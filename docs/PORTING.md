@@ -3,6 +3,10 @@
 The portable package does not depend on the Waveshare adapter. Keep the core and
 supply rendering, timing and input integration for your platform.
 
+For integration into an existing application or GUI, start with the
+[integration guide](INTEGRATION.md). It covers the high-level `Mascot` API,
+temporary reactions, multiple instances, and commands from other tasks.
+
 ## 1. Allocate a framebuffer
 
 Provide writable native-endian `uint16_t` RGB565 pixels. For a tightly packed
@@ -20,6 +24,13 @@ if (!renderer.valid()) {
 
 The renderer performs no allocation. An adapter may allocate a framebuffer at
 startup; the included Waveshare adapter does so in PSRAM.
+
+An existing framebuffer can be shared through `sub_surface()`: each view clips
+to its widget rectangle while keeping the parent stride. If a full framebuffer
+does not fit, use the [stripe example](../sdk/Mochi/examples/stripes.cpp). Advance
+the pose once per complete frame, render it into each stripe with an offset
+center, and finish each display transfer before reusing the buffer. Measure the
+additional rasterization cost and task stack usage on your target.
 
 ## 2. Drive animation and present pixels
 

@@ -18,6 +18,11 @@ bool Animator::setState(State state) {
 }
 void Animator::next() { setState(static_cast<State>((static_cast<int>(state_) + 1) % kStateCount)); }
 void Animator::previous() { setState(static_cast<State>((static_cast<int>(state_) + kStateCount - 1) % kStateCount)); }
+void Animator::restart() {
+  elapsed_ = 0;
+  blink_age_ = -1;
+  if (paused_) pose_ = targetPose();
+}
 void Animator::blink() { blink_age_ = 0; }
 bool Animator::setSpeed(float multiplier) {
   if (!std::isfinite(multiplier) || multiplier < .1f || multiplier > 4) return false;

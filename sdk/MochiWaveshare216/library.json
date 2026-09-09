@@ -1,6 +1,6 @@
 {
   "name": "MochiWaveshare216",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Waveshare ESP32-S3-Touch-AMOLED-2.16 display, touch and power adapter for Mochi.",
   "frameworks": "arduino",
   "platforms": "espressif32",

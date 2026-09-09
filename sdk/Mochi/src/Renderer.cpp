@@ -32,10 +32,7 @@ Palette default_palette(Character character) {
 Renderer::Renderer(Surface surface, Palette palette)
     : pixels_(surface.pixels),width_(surface.width),height_(surface.height),
       stride_(surface.stride == 0 ? surface.width : surface.stride),palette_(palette) {
-  // The coordinate bound also keeps raster conversions safely inside int.
-  if (!pixels_ || width_ <= 0 || height_ <= 0 || width_ > 16384 || height_ > 16384 || stride_ < width_) return;
-  const uint64_t required = uint64_t(height_ - 1) * uint64_t(stride_) + uint64_t(width_);
-  valid_ = required <= surface.capacity;
+  valid_ = valid_surface(surface);
 }
 bool Renderer::setCharacter(Character character) {
   if (static_cast<unsigned>(character) >= kCharacterCount) return false;

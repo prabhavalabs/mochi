@@ -13,11 +13,10 @@ constexpr int kWidth = board::kWidth, kHeight = board::kHeight;
 constexpr uint16_t white = rgb565(0xF8F3E6), muted = rgb565(0x9BA3AF);
 constexpr uint16_t peach = rgb565(0xF4BA9F), surface = rgb565(0x1C2129);
 constexpr uint16_t border = rgb565(0x343B46);
-Animator buddy;
+Mascot buddy;
 GestureRecognizer gestures;
 enum class View { Stage, Moods, Characters };
 View view = View::Stage;
-Character character = Character::Mochi;
 bool ready = false, tour = false, dirty = true;
 float tour_elapsed = 0;
 uint32_t previous_ms = 0, frame_ms = 0, frame_count = 0, fps_ms = 0, touch_count = 0;
@@ -49,9 +48,9 @@ void select_state(int index) {
 }
 void select_character(Character selected) {
   if (static_cast<unsigned>(selected) >= kCharacterCount) return;
-  character = selected;
+  buddy.setCharacter(selected);
   dirty = true;
-  Serial.printf("Character: %s\n", character_name(character));
+  Serial.printf("Character: %s\n", character_name(buddy.character()));
 }
 void status_json() {
   const auto& b = board::status();
@@ -59,7 +58,7 @@ void status_json() {
       "\"display\":%s,\"touch\":%s,\"pmic\":%s,\"psram\":%u,"
       "\"state\":\"%s\",\"character\":\"%s\",\"view\":\"%s\",\"fps\":%.1f,\"touch_events\":%u,\"heap\":%u,\"render_us\":%u,\"transfer_us\":%u}\n",
       kVersion, ready ? "true" : "false", b.display ? "true" : "false", b.touch ? "true" : "false",
-      b.power ? "true" : "false", ESP.getPsramSize(), state_name(buddy.state()), character_name(character),
+      b.power ? "true" : "false", ESP.getPsramSize(), state_name(buddy.state()), character_name(buddy.character()),
       view == View::Stage ? "stage" : view == View::Moods ? "moods" : "characters",
       fps, touch_count, ESP.getFreeHeap(), render_us, transfer_us);
 }
@@ -128,7 +127,16 @@ void serial_input() {
         char* end; const long index = strtol(command + 6, &end, 10);
         if (end != command + 6 && !*end && index >= 0 && index < kStateCount) select_state(index);
         else Serial.println("Use state 0..9");
-      } else if (!strncmp(command, "character ", 10)) {
+      } else if (!strncmp(command, "trigger ", 8)) {
+        char* end; const long index = strtol(command + 8, &end, 10);
+        const char* duration = end;
+        const float seconds = strtof(duration, &end);
+        if (duration != command + 8 && *duration == ' ' && end != duration && !*end &&
+            index >= 0 && index < kStateCount && buddy.trigger(static_cast<State>(index), seconds)) {
+          tour = false; dirty = true;
+        } else Serial.println("Use trigger STATE SECONDS (state 0..9, seconds > 0 and <= 86400)");
+      } else if (!strcmp(command, "cancel")) { buddy.cancelTrigger(); dirty = true; }
+      else if (!strncmp(command, "character ", 10)) {
         char* end; const long index = strtol(command + 10, &end, 10);
         if (end != command + 10 && !*end && index >= 0 && index < kCharacterCount) select_character(static_cast<Character>(index));
         else Serial.println("Use character 0..3");
@@ -139,7 +147,7 @@ void serial_input() {
       else if (!strcmp(command, "tour off")) { tour = false; dirty = true; }
       else if (!strcmp(command, "pause")) { buddy.setPaused(true); dirty = true; }
       else if (!strcmp(command, "play")) { buddy.setPaused(false); dirty = true; }
-      else Serial.println("Commands: status, state 0..9, character 0..3, menu characters/moods/close, tour on/off, pause, play");
+      else Serial.println("Commands: status, state 0..9, trigger STATE SECONDS, cancel, character 0..3, menu characters/moods/close, tour on/off, pause, play");
     }
   }
 }
@@ -155,7 +163,7 @@ void draw() {
     for (int i = 0; i < kCharacterCount; ++i) {
       const Character candidate = static_cast<Character>(i);
       const int x = 24 + i % 2 * 224, y = 78 + i / 2 * 164;
-      const bool selected = candidate == character;
+      const bool selected = candidate == buddy.character();
       c.fillRoundRect(x, y, 208, 148, 16, surface);
       c.drawRoundRect(x, y, 208, 148, 16, selected ? peach : border);
       renderer.setCharacter(candidate);
@@ -176,12 +184,11 @@ void draw() {
     button(320, 392, 136, 52, buddy.speed() == 1 ? "1x pace" : buddy.speed() > 1 ? "1.5x pace" : ".5x pace");
     centered("Ten little ways to feel", 240, 459, 1, muted);
   } else {
-    button(24, 18, 196, 38, character_name(character));
+    button(24, 18, 196, 38, character_name(buddy.character()));
     c.fillTriangle(201, 32, 211, 32, 206, 38, muted);
     button(342, 18, 114, 38, tour ? "Tour on" : "Tour", tour);
-    Renderer renderer({c.getFramebuffer(), size_t(kWidth * kHeight), kWidth, kHeight});
-    renderer.setCharacter(character);
-    renderer.draw(buddy.pose(), 240, 207, playground::stage_scale(character));
+    buddy.draw({c.getFramebuffer(), size_t(kWidth * kHeight), kWidth, kHeight},
+               240, 207, playground::stage_scale(buddy.character()));
     // Small state cues live outside the silhouette.
     const float t = buddy.elapsed();
     if (buddy.state() == State::Sleeping) text("z Z", 353, 104 - int(4 * sinf(t)), 2, peach);
@@ -208,6 +215,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setTxTimeoutMs(0);
   Serial.printf("Mochi SDK %s example starting\n", kVersion);
+  buddy.onStateChange([](State, State, void*) { dirty = true; });
   ready = board::begin();
   previous_ms = fps_ms = millis();
   status_json();

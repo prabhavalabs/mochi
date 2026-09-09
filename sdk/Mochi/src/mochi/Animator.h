@@ -10,6 +10,9 @@ class Animator {
 
   Animator();
   bool setState(State state);
+  // Replay the current state without a state-change callback. Keeps playback
+  // settings and blends from the current pose; a paused replay snaps immediately.
+  void restart();
   void next();
   void previous();
   void blink();

@@ -2,7 +2,7 @@
 
 Arduino adapter for **Waveshare ESP32-S3-Touch-AMOLED-2.16**: CO5300 480 × 480
 display, CST9220 touch, AXP2101 power chip, 16 MB flash and 8 MB OPI PSRAM.
-Version 0.2.0. Use with the Mochi core package at the same version.
+Version 0.3.0. Use with the Mochi core package at the same version.
 
 ## Add both local packages
 

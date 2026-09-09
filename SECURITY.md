@@ -15,7 +15,7 @@ This is a volunteer project; no response-time guarantee or paid bounty is offere
 
 ## Supported versions
 
-Security fixes target the latest source on `main` and the current 0.2.x series.
+Security fixes target the latest source on `main` and the current 0.3.x series.
 Older development versions do not have a separate backport commitment. Update to
 the latest available code before reporting an issue that may already be fixed.
 

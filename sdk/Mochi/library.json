@@ -1,7 +1,7 @@
 {
   "name": "Mochi",
-  "version": "0.2.0",
-  "description": "Portable C++17 animated companion: poses, playback, RGB565 rendering and touch gestures.",
+  "version": "0.3.0",
+  "description": "Portable C++17 animated companions: event commands, timed reactions and RGB565 widget rendering.",
   "keywords": [
     "animation",
     "mascot",
@@ -21,7 +21,8 @@
       "CMakeLists.txt",
       "README.md",
       "library.json",
-      "LICENSE"
+      "LICENSE",
+      "cmake"
     ]
   },
   "license": "MIT",

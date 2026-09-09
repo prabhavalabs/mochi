@@ -1,6 +1,41 @@
 # Mochi
 
-Portable, allocation-free C++17 animation for four little companions. Version 0.2.0.
+Portable, allocation-free C++17 animation for four little companions. Version 0.3.0.
+
+## Embed a reusable companion
+
+`Mascot` owns a character's appearance, playback, and temporary reactions. Your
+application owns the display, timing, tasks, and screen layout:
+
+```cpp
+#include <Mochi.h>
+
+mochi::Mascot companion;
+
+void initialize() {
+    companion.setCharacter(mochi::Character::Peach);
+    companion.setState(mochi::State::Idle);
+}
+void onNotification() {  // Called on the companion's owner task.
+    companion.trigger(mochi::State::Waving, 2.0f);
+}
+void render(mochi::Surface widget, float seconds) {
+    companion.update(seconds);
+    mochi::Renderer(widget).clear();
+    companion.draw(widget, widget.width / 2.f, widget.height / 2.f, .32f);
+}
+```
+
+`trigger()` returns to the base state when its duration expires; `setState()`
+changes the base state and cancels an active reaction. Durations are animation
+seconds, affected by speed and pause. Each instance has independent state.
+`Mascot` never clears the screen, starts a task, or requires a selection menu.
+
+Read the [application integration guide](../../docs/INTEGRATION.md) for the full
+reaction contract, command dispatch, SPSC/FreeRTOS queues, clipped subviews,
+multiple instances, small buffers, and GUI/driver boundaries. Direct calls are
+owned by one task; other tasks post commands. The lower-level `Animator` and
+`Renderer` APIs below remain available for custom integrations.
 
 ## Add to a project
 
@@ -20,10 +55,21 @@ add_subdirectory(path/to/Mochi)
 target_link_libraries(my_application PRIVATE Mochi::Mochi)
 ```
 
+Or install the compiled core with `cmake --install` and consume it independently:
+
+```cmake
+find_package(Mochi 0.3 CONFIG REQUIRED)
+target_link_libraries(my_application PRIVATE Mochi::Mochi)
+```
+
+Set `CMAKE_PREFIX_PATH` to the installation prefix. See the
+[install instructions](../../docs/INTEGRATION.md#install-the-sdk-independently).
+The installed static library must match the application's architecture/toolchain.
+
 No Arduino or external graphics library is needed for the core. `examples/offscreen.cpp`
 is a complete consumer that renders a PPM image with only the SDK and C++ library.
 
-## Animate and render
+## Lower-level animation and rendering
 
 ```cpp
 #include <Mochi.h>
@@ -90,6 +136,7 @@ Mochi. Recompile consumers when upgrading, as `Palette` gained two fields.
 | --- | --- |
 | `setState(State)` | Select a state; reject invalid enum values. Selecting the current state is a no-op. |
 | `next()` / `previous()` | Cycle through all ten states, with wraparound. |
+| `restart()` | Restart current-state time and clear a manual blink without changing state, pause, speed or speech level. No state-change callback. |
 | `blink()` | Queue a brief blink; playback must run for it to advance. Sleeping eyes remain closed. |
 | `setPaused(bool)` | Freeze/resume automatic motion. Selecting another state while paused previews that pose immediately. |
 | `setSpeed(float)` | Accept finite multipliers from 0.1 through 4.0; reject other values without changing speed. |
@@ -116,7 +163,8 @@ buddy.onStateChange([](mochi::State from, mochi::State to, void* context) {
 }, nullptr);
 ```
 
-Callbacks run during `setState()` after the state changes. Keep them short and
+Animator callbacks run during `setState()` after the state changes. `Mascot` also
+uses this callback when a reaction changes state or expires. Keep callbacks short and
 do not re-enter playback methods from the callback. Use a single animation/UI
 task for each animator and renderer; queue work from network, microphone or
 interrupt callbacks. Separate animator instances have independent playback.
@@ -128,6 +176,12 @@ Pixels are native-endian `uint16_t` RGB565 values, not a byte-swapped wire buffe
 The buffer must remain alive for the renderer's lifetime. A stride of zero means
 `width`; larger strides allow a view into a padded buffer. Row padding is never
 cleared or drawn over.
+
+`valid_surface(surface)` checks a layout without constructing a renderer.
+`sub_surface(parent, x, y, width, height)` returns an exact zero-copy rectangle,
+retaining the parent's stride; an invalid parent or rectangle returns an empty
+surface. Coordinates used when drawing into a view are relative to that view.
+See [widget integration](../../docs/INTEGRATION.md#put-a-character-in-an-existing-screen).
 
 ```cpp
 mochi::Surface surface{pixels.data(), pixels.size(), width, height};

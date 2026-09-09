@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 — Application integration
+
+- Reusable `Mascot` instances with independent appearance, playback and visibility.
+- Temporary reactions that return to the application's base state; explicit cancellation and retriggering.
+- Validated value commands and an optional bounded single-producer/single-consumer queue.
+- Zero-copy RGB565 subviews for embedding characters in existing screens.
+- Independent application, small-buffer stripe, and FreeRTOS queue examples.
+- Relocatable CMake installation with a `Mochi::Mochi` imported target.
+- Integration documentation covering task ownership, GUI buffers, timing and portability limits.
+- Touchscreen application now uses the reusable instance API; USB `trigger` and `cancel` commands.
+- Native reaction/subview/queue tests, installed-package checks, and both embedded builds in CI.
+- Existing `Animator`, `Renderer`, pose and gesture source APIs remain supported.
+
 ## 0.2.0 — Initial public source distribution
 
 - Portable C++17 animation, RGB565 rendering, palettes and gesture APIs.

@@ -25,12 +25,20 @@ Follow the [README](README.md) for installation. From the project root:
 npm run check
 npm run test:web
 python3 scripts/test-sdk.py
+python3 scripts/test-install.py
 pio run --project-dir firmware
+pio run --project-dir examples/freertos_companion
 ```
 
 The sanitizer runner is intended for Clang on macOS/Linux. You can also build the
 core with CMake and run CTest, including on Windows. A change that only touches
 documentation does not need a hardware flash. Report which checks you actually ran.
+
+The install test needs CMake and checks a consumer after moving the installation
+and removing the original source/build directories. Native integration tests
+cover reaction timing, subview bounds, stripe rendering, and concurrent queue
+delivery. Keep the two embedded examples' board/toolchain settings aligned when
+changing their shared dependencies.
 
 ## Code conventions
 
