@@ -66,6 +66,8 @@ order: 35
 
 Write `##` headings for the table of contents. Use site-relative links such as `/docs/installation/`. Navigation, search, pagination, and sitemap entries derive from collection metadata. Keep slugs and order values unique. Existing groups are Start here, SDK, Hardware, Website, and Project. The full-text search index is generated from all published pages.
 
+Fence every code sample with its actual language, such as `cpp`, `sh`, `cmake`, `ini`, `json`, or `yaml`, so Shiki can tokenize it. Use `text` only for plain output and directory trees. Markdown samples use the shared GitHub light/dark themes from `astro.config.mjs`; the landing-page example supplies the dark theme for both theme keys because it always appears on a dark panel. The production-site check verifies language IDs, highlighted tokens, and dark-theme token values in every built code block.
+
 ## Character personalities
 
 Edit `src/lib/characters.ts` for names, captions, body/face colors, and browser pacing. Edit `global.css` for the corresponding `data-character` accent tokens in light and dark themes. Keep sufficient contrast in both themes. New silhouettes need updates in both `CharacterIcon.tsx` and the Canvas renderer in `lib/animation.js`.

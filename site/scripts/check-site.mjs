@@ -17,6 +17,9 @@ const pages = new Map(
   await Promise.all(htmlFiles.map(async (file) => [file, await readFile(file, 'utf8')])),
 );
 const failures = [];
+const plainTextLanguages = new Set(['text', 'txt', 'plaintext']);
+let highlightedCodeBlocks = 0;
+let plainTextBlocks = 0;
 for (const [file, html] of pages) {
   const route =
     '/' +
@@ -48,6 +51,39 @@ for (const [file, html] of pages) {
     assert.ok(html.includes('rel="canonical"'), `${route}: canonical URL`);
     assert.ok(html.includes('name="description"'), `${route}: page description`);
   }
+
+  for (const match of html.matchAll(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/g)) {
+    const [, attributes, code] = match;
+    const language = attributes.match(/\bdata-language="([^"]+)"/)?.[1];
+    assert.ok(attributes.includes('astro-code'), `${route}: code block is rendered by Shiki`);
+    assert.ok(language, `${route}: code block declares its language`);
+    assert.ok(code.includes('<code>'), `${route}: code block contains code markup`);
+
+    if (plainTextLanguages.has(language)) {
+      plainTextBlocks += 1;
+      continue;
+    }
+
+    const lightColors = [...code.matchAll(/style="color:([^;\"]+)/g)].map((item) => item[1]);
+    const darkColors = [...code.matchAll(/--shiki-dark:([^;\"]+)/g)].map((item) => item[1]);
+    assert.ok(lightColors.length > 0, `${route}: ${language} code has highlighted tokens`);
+    assert.equal(
+      darkColors.length,
+      lightColors.length,
+      `${route}: ${language} tokens include the dark theme`,
+    );
+    if (route === '/') {
+      assert.ok(
+        new Set(lightColors).size > 1,
+        `${route}: landing example has distinct token colors`,
+      );
+      assert.ok(
+        new Set(darkColors).size > 1,
+        `${route}: landing example keeps distinct token colors in dark mode`,
+      );
+    }
+    highlightedCodeBlocks += 1;
+  }
 }
 const search = JSON.parse(await readFile(path.join(dist, 'search-index.json'), 'utf8'));
 assert.equal(new Set(search.map((p) => p.slug)).size, search.length, 'Unique guide routes');
@@ -61,5 +97,5 @@ for (const item of search) {
 }
 assert.equal(failures.length, 0, failures.join('\n'));
 console.log(
-  `Validated ${pages.size} pages, internal links and anchors, metadata, and ${search.length} search entries.`,
+  `Validated ${pages.size} pages, ${highlightedCodeBlocks} highlighted code blocks, ${plainTextBlocks} plaintext blocks, internal links and anchors, metadata, and ${search.length} search entries.`,
 );

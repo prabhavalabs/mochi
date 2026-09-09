@@ -18,6 +18,9 @@ const load = async (relative) => {
 const { parsePreferences } = await load('../src/lib/preferences.ts');
 const { characters } = await load('../src/lib/characters.ts');
 const { samplePose, STATES, Mochi } = await load('../src/lib/animation.js');
+const { adjacentStateId, nextDevicePace, previewShouldPause } = await load(
+  '../src/lib/device-preview-state.ts',
+);
 test('Stored preferences tolerate missing, malformed, and unsupported values', () => {
   for (const value of [
     null,
@@ -95,6 +98,29 @@ test('All 40 character/state combinations produce valid canvas geometry', () => 
     }
   assert.throws(() => buddy.setState('invalid'), RangeError);
   buddy.destroy();
+});
+
+test('Device controls wrap moods and offer the firmware pace sequence', () => {
+  assert.equal(adjacentStateId(STATES[0].id, -1), STATES.at(-1).id);
+  assert.equal(adjacentStateId(STATES.at(-1).id, 1), STATES[0].id);
+  for (let index = 0; index < STATES.length; index++) {
+    const next = adjacentStateId(STATES[index].id, 1);
+    assert.equal(next, STATES[(index + 1) % STATES.length].id);
+    assert.equal(adjacentStateId(next, -1), STATES[index].id);
+  }
+  assert.throws(() => adjacentStateId('unknown', 1), RangeError);
+  assert.equal(nextDevicePace(0.5), 1);
+  assert.equal(nextDevicePace(1), 1.5);
+  assert.equal(nextDevicePace(1.5), 0.5);
+  assert.equal(nextDevicePace(0.8), 1);
+  assert.equal(nextDevicePace(1.8), 0.5);
+});
+
+test('Opening a device menu suspends playback without changing its stored pause state', () => {
+  assert.equal(previewShouldPause(false, 'stage'), false);
+  assert.equal(previewShouldPause(false, 'characters'), true);
+  assert.equal(previewShouldPause(false, 'moods'), true);
+  assert.equal(previewShouldPause(true, 'stage'), true);
 });
 
 test('System theme changes, explicit overrides, cross-tab updates, and restricted storage', async () => {

@@ -189,11 +189,12 @@ export class Mochi {
   }
   resize() {
     const box = this.canvas.getBoundingClientRect();
-    this.width = box.width;
-    this.height = box.height;
+    // CSS 3D transforms alter the bounding rectangle, not the canvas's logical layout size.
+    this.width = this.canvas.clientWidth || box.width;
+    this.height = this.canvas.clientHeight || box.height;
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = Math.round(box.width * this.dpr);
-    this.canvas.height = Math.round(box.height * this.dpr);
+    this.canvas.width = Math.round(this.width * this.dpr);
+    this.canvas.height = Math.round(this.height * this.dpr);
     this.draw();
   }
   setState(id) {

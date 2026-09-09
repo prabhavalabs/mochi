@@ -8,6 +8,8 @@ import CharacterIcon from './CharacterIcon';
 import { characters, characterById } from '@/lib/characters';
 import { usePreferences, setPreferences } from '@/lib/preferences';
 import { Mochi, STATES } from '@/lib/animation';
+import DevicePreview from './DevicePreview';
+import { adjacentStateId, previewShouldPause, type DeviceView } from '@/lib/device-preview-state';
 
 export function CharacterPicker({ compact = false }: { compact?: boolean }) {
   const { character } = usePreferences();
@@ -73,9 +75,9 @@ export default function Playground() {
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [tour, setTour] = useState(false);
+  const [deviceView, setDeviceView] = useState<DeviceView>('stage');
   const [reduced, setReduced] = useState(false);
   const [ready, setReady] = useState(false);
-  const pointer = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!canvas.current) return;
     const media = matchMedia('(prefers-reduced-motion: reduce)');
@@ -117,15 +119,16 @@ export default function Playground() {
   }, [state]);
   useEffect(() => {
     if (renderer.current) {
-      renderer.current.reduced = reduced && paused;
-      renderer.current.setPaused(paused);
+      const shouldPause = previewShouldPause(paused, deviceView);
+      renderer.current.reduced = reduced && shouldPause;
+      renderer.current.setPaused(shouldPause);
     }
-  }, [paused, reduced]);
+  }, [paused, reduced, deviceView]);
   useEffect(() => {
     if (renderer.current) renderer.current.speed = speed;
   }, [speed]);
   useEffect(() => {
-    if (!tour || paused) return;
+    if (!tour || paused || deviceView !== 'stage') return;
     const timer = window.setInterval(() => {
       if (!document.hidden && renderer.current?.visible)
         setState(
@@ -133,12 +136,12 @@ export default function Playground() {
         );
     }, 5000);
     return () => clearInterval(timer);
-  }, [tour, paused]);
+  }, [tour, paused, deviceView]);
   const select = (id: string) => {
     setState(id);
     setTour(false);
   };
-  const detail = STATES.find((s) => s.id === state)!;
+  const stepState = (direction: -1 | 1) => select(adjacentStateId(state, direction));
   return (
     <>
       <section className="hero" aria-labelledby="hero-heading">
@@ -167,56 +170,31 @@ export default function Playground() {
           </div>
           <p className="hero-footnote">C++17 · Any RGB565 display · Yours to make your own</p>
         </div>
-        <div className="mascot-stage" id="playground">
-          <div className="stage-top">
-            <span>
-              <span className="tiny-dot" />{' '}
-              {paused ? 'Taking a little pause' : 'A little life, in real time'}
-            </span>
-            <span>0.3.0</span>
-          </div>
-          <button
-            type="button"
-            className="canvas-button"
-            aria-label={`Blink ${c.name}. Swipe left or right to change state.`}
-            onPointerDown={(event) => {
-              pointer.current = { x: event.clientX, y: event.clientY };
-              event.currentTarget.setPointerCapture(event.pointerId);
-            }}
-            onPointerCancel={() => {
-              pointer.current = null;
-            }}
-            onPointerUp={(event) => {
-              if (!pointer.current) return;
-              const dx = event.clientX - pointer.current.x,
-                dy = event.clientY - pointer.current.y;
-              pointer.current = null;
-              if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy))
-                select(
-                  STATES[
-                    (STATES.findIndex((s) => s.id === state) + (dx < 0 ? 1 : STATES.length - 1)) %
-                      STATES.length
-                  ].id,
-                );
-              else if (Math.hypot(dx, dy) < 25) renderer.current?.blink();
-            }}
-            onClick={(event) => {
-              if (event.detail === 0) renderer.current?.blink();
-            }}
-          >
-            {!ready && <CharacterIcon id={character} className="canvas-fallback" />}
-            <canvas
-              ref={canvas}
-              aria-label={`${c.name} is ${detail.name.toLowerCase()}`}
-              role="img"
-            />
-          </button>
-          <div className="stage-caption" aria-live="polite">
-            <h2>{c.name}</h2>
-            <p>{c.detail}</p>
-            <span>{detail.detail}</span>
-          </div>
-        </div>
+        <DevicePreview
+          canvas={canvas}
+          character={character}
+          state={state}
+          paused={paused}
+          speed={speed}
+          tour={tour}
+          reduced={reduced}
+          ready={ready}
+          view={deviceView}
+          onViewChange={setDeviceView}
+          onCharacterChange={(id) => setPreferences({ character: characterById(id).id })}
+          onStateChange={(id) => {
+            if (id === 'previous') stepState(-1);
+            else if (id === 'next') stepState(1);
+            else select(id);
+          }}
+          onPausedChange={setPaused}
+          onSpeedChange={setSpeed}
+          onTourChange={(value) => {
+            setTour(value);
+            if (value) setPaused(false);
+          }}
+          onBlink={() => renderer.current?.blink()}
+        />
       </section>
       <section className="cast-section" aria-label="Character selection">
         <CharacterPicker />
@@ -248,7 +226,7 @@ export default function Playground() {
           className="state-picker"
         >
           {STATES.map((s) => (
-            <ToggleGroupItem key={s.id} value={s.id}>
+            <ToggleGroupItem key={s.id} value={s.id} onClick={() => setTour(false)}>
               {s.name}
             </ToggleGroupItem>
           ))}
