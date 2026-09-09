@@ -52,6 +52,13 @@ Canonical SDK, board, and community guides live in their original repository Mar
 
 Sync runs before `dev`, `check`, and `build`. Generated Markdown and copied assets are build outputs; edit the original source instead. Restart the dev server after changing an imported source guide. Each page's **Improve this page** link points to the correct source.
 
+Brand and social artwork is authored in `docs/brand/` and copied to
+`site/public/brand/` during the build. The original `mochi.png` remains the PNG
+master. `repository-cover.jpg` is reserved for GitHub, while
+`social-preview.jpg`, `social-preview-x.jpg`, and `social-square.jpg` provide
+the website's landscape, X, and optional square sharing formats. These are
+static build assets and add no runtime image processing or third-party request.
+
 To add a website-authored guide, create `site/src/content/docs/your-page.md`:
 
 ```yaml
@@ -85,6 +92,30 @@ npx shadcn@4.21.0 add @shadcn/tooltip --cwd site
 ```
 
 Review generated imports and dependency changes. Use `@/lib/utils` for `cn`, and semantic theme tokens for backgrounds, accents, borders, and text. Preserve accessible labels, keyboard behavior, focus indicators, and dialog titles. Avoid remote fonts or images on the critical rendering path.
+
+## Canonical and social metadata
+
+The official site URL is `https://mochi.prabhavalabs.com/`. Astro derives
+canonical and absolute social-image URLs from `PUBLIC_SITE_URL`; keep that value
+on the official domain in production even though Cloudflare also exposes a
+`pages.dev` provider hostname.
+
+The shared layout declares the standard title, description, URL, image, image
+dimensions, MIME type, and image alt fields. The default Open Graph image is the
+1200 × 630 `social-preview.jpg`; X uses the 1200 × 600
+`social-preview-x.jpg` with a large-image card. The 1200 × 1200
+`social-square.jpg` is available as an optional secondary Open Graph image or
+for manual posts. The [Open Graph protocol](https://ogp.me/) defines the base
+and structured image fields, and
+[LinkedIn's sharing guide](https://www.linkedin.com/help/linkedin/answer/a521928)
+documents its landscape image requirements.
+
+After changing metadata or share artwork, build and deploy before testing the
+official page URL in platform preview tools. Confirm that page source contains
+absolute HTTPS URLs and that each JPEG is publicly readable. Platform caches,
+cropping, and ranking rules vary, so no single image treatment is guaranteed to
+render identically everywhere; use a versioned filename for major artwork
+updates when an old URL may remain cached.
 
 ## Animation lifecycle
 

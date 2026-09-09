@@ -17,6 +17,14 @@ const {
 } = Astro.props;
 const navigation = await getNavigation();
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const pageTitle = `${title} · Mochi`;
+const landscapeSocialAlt =
+  'A waving cream-colored Mochi mascot beside the Mochi wordmark on a dark background.';
+const squareSocialAlt =
+  'A waving cream-colored Mochi mascot below the Mochi wordmark on a dark background.';
+const openGraphImage = new URL('/brand/social-preview.jpg', Astro.site);
+const openGraphSquareImage = new URL('/brand/social-square.jpg', Astro.site);
+const twitterImage = new URL('/brand/social-preview-x.jpg', Astro.site);
 ---
 
 <!doctype html>
@@ -25,17 +33,30 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <title>{title} · Mochi</title>
+    <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta property="og:title" content={`${title} · Mochi`} />
+    <meta property="og:site_name" content="Mochi" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL('/brand/repository-cover.jpg', Astro.site)} />
-    <meta property="og:image:width" content="1280" />
-    <meta property="og:image:height" content="640" />
+    <meta property="og:image" content={openGraphImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:alt" content={landscapeSocialAlt} />
+    <meta property="og:image" content={openGraphSquareImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="1200" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:alt" content={squareSocialAlt} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={twitterImage} />
+    <meta name="twitter:image:alt" content={landscapeSocialAlt} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
       (() => {

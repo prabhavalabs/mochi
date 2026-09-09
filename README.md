@@ -7,7 +7,7 @@
 The original cream-colored **Mochi** is the project's mascot and brand mark.
 See the [brand assets](docs/brand/README.md) for the master artwork and repository cover.
 
-The core runs without Arduino, a graphics framework, network access, or an account. The included adapter brings it to the **Waveshare ESP32-S3-Touch-AMOLED-2.16**. The [browser playground and documentation](https://mochi-sdk.pages.dev) let you explore all four characters without hardware.
+The core runs without Arduino, a graphics framework, network access, or an account. The included adapter brings it to the **Waveshare ESP32-S3-Touch-AMOLED-2.16**. The [browser playground and documentation](https://mochi.prabhavalabs.com/) let you explore all four characters without hardware.
 
 **Version 0.3.0.** This is an early SDK: source compatibility may change before 1.0. Packages are consumed from this repository and are not yet published to a package registry.
 
@@ -73,7 +73,7 @@ npm run test:site
 npm run preview
 ```
 
-The production site is deployed to [Cloudflare Pages](https://mochi-sdk.pages.dev).
+The production site is available at [mochi.prabhavalabs.com](https://mochi.prabhavalabs.com/) and deployed with Cloudflare Pages.
 See [website maintenance](site/src/content/docs/website.md) and
 [deployment](site/src/content/docs/deployment.md) for content authoring, components,
 characters, themes, validation, and custom-domain settings. Fonts and assets are

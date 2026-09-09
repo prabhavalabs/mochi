@@ -9,13 +9,21 @@ await rm(generated, { recursive: true, force: true });
 await mkdir(generated, { recursive: true });
 await mkdir(path.join(site, 'public/brand'), { recursive: true });
 await mkdir(path.join(site, 'public/media'), { recursive: true });
-await cp(path.join(root, 'docs/brand/mochi.png'), path.join(site, 'public/brand/mochi.png'));
-await cp(
-  path.join(root, 'docs/brand/repository-cover.jpg'),
-  path.join(site, 'public/brand/repository-cover.jpg'),
+const brandAssets = [
+  'mochi.png',
+  'repository-cover.jpg',
+  'social-preview.jpg',
+  'social-preview-x.jpg',
+  'social-square.jpg',
+];
+await Promise.all(
+  brandAssets.map((asset) =>
+    cp(path.join(root, 'docs/brand', asset), path.join(site, 'public/brand', asset)),
+  ),
 );
 await cp(path.join(root, 'docs/images'), path.join(site, 'public/media'), { recursive: true });
 const routes = new Map(sources.map(([slug, , , , source]) => [source, `/docs/${slug}/`]));
+const brandRoutes = new Map(brandAssets.map((asset) => [`docs/brand/${asset}`, `/brand/${asset}`]));
 for (const [slug, title, group, order, source, description] of sources) {
   let content = (await readFile(path.join(root, source), 'utf8')).replace(/^# .+\r?\n/, '');
   // Resolve authored repository links before the Markdown is moved into the collection.
@@ -25,13 +33,10 @@ for (const [slug, title, group, order, source, description] of sources) {
     const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(source), file));
     const destination =
       routes.get(resolved) ||
+      brandRoutes.get(resolved) ||
       (resolved.startsWith('docs/images/')
         ? `/media/${path.posix.basename(resolved)}`
-        : resolved === 'docs/brand/mochi.png'
-          ? '/brand/mochi.png'
-          : resolved === 'docs/brand/repository-cover.jpg'
-            ? '/brand/repository-cover.jpg'
-            : `https://github.com/prabhavalabs/mochi/blob/main/${resolved}`);
+        : `https://github.com/prabhavalabs/mochi/blob/main/${resolved}`);
     return `${label}(${destination}${hash ? `#${hash}` : ''})`;
   });
   const metadata = { slug, title, group, order, description, source };

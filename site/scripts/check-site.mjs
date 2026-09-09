@@ -2,7 +2,48 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import { siteUrl } from '../astro.config.mjs';
+
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
+const site = new URL(siteUrl);
+const socialImages = [
+  { name: 'social-preview.jpg', width: 1200, height: 630 },
+  { name: 'social-preview-x.jpg', width: 1200, height: 600 },
+  { name: 'social-square.jpg', width: 1200, height: 1200 },
+];
+
+function attribute(tag, name) {
+  return tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1];
+}
+
+function metaContents(html, attributeName, attributeValue) {
+  return [...html.matchAll(/<meta\b[^>]*>/g)]
+    .map((match) => match[0])
+    .filter((tag) => attribute(tag, attributeName) === attributeValue)
+    .map((tag) => attribute(tag, 'content'));
+}
+
+function jpegDimensions(image) {
+  assert.equal(image.readUInt16BE(0), 0xffd8, 'Social image is a JPEG');
+  const startOfFrame = new Set([
+    0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
+  ]);
+  let offset = 2;
+  while (offset + 4 < image.length) {
+    while (image[offset] === 0xff) offset += 1;
+    const marker = image[offset++];
+    if (marker === 0xd9 || marker === 0xda) break;
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    const length = image.readUInt16BE(offset);
+    assert.ok(length >= 2 && offset + length <= image.length, 'Valid JPEG segment');
+    if (startOfFrame.has(marker)) {
+      return { height: image.readUInt16BE(offset + 3), width: image.readUInt16BE(offset + 5) };
+    }
+    offset += length;
+  }
+  assert.fail('JPEG dimensions are present');
+}
+
 async function walk(dir) {
   return (
     await Promise.all(
@@ -48,8 +89,44 @@ for (const [file, html] of pages) {
   }
   if (!file.endsWith('/docs/index.html')) {
     assert.equal((html.match(/<h1(?:\s|>)/g) || []).length, 1, `${route}: one page heading`);
-    assert.ok(html.includes('rel="canonical"'), `${route}: canonical URL`);
-    assert.ok(html.includes('name="description"'), `${route}: page description`);
+    const canonicalPath = file.endsWith('/404.html') ? '/404/' : route;
+    const expectedCanonical = new URL(canonicalPath, site).href;
+    const canonicalTags = [...html.matchAll(/<link\b[^>]*>/g)]
+      .map((match) => match[0])
+      .filter((tag) => attribute(tag, 'rel') === 'canonical');
+    assert.equal(canonicalTags.length, 1, `${route}: one canonical URL`);
+    assert.equal(attribute(canonicalTags[0], 'href'), expectedCanonical, `${route}: canonical URL`);
+
+    const title = html.match(/<title>([^<]+)<\/title>/)?.[1];
+    const description = metaContents(html, 'name', 'description')[0];
+    const openGraphImages = [
+      new URL('/brand/social-preview.jpg', site).href,
+      new URL('/brand/social-square.jpg', site).href,
+    ];
+    assert.ok(title, `${route}: page title`);
+    assert.ok(description, `${route}: page description`);
+    assert.deepEqual(metaContents(html, 'property', 'og:site_name'), ['Mochi']);
+    assert.deepEqual(metaContents(html, 'property', 'og:locale'), ['en_US']);
+    assert.deepEqual(metaContents(html, 'property', 'og:type'), ['website']);
+    assert.deepEqual(metaContents(html, 'property', 'og:title'), [title]);
+    assert.deepEqual(metaContents(html, 'property', 'og:description'), [description]);
+    assert.deepEqual(metaContents(html, 'property', 'og:url'), [expectedCanonical]);
+    assert.deepEqual(metaContents(html, 'property', 'og:image'), openGraphImages);
+    assert.deepEqual(metaContents(html, 'property', 'og:image:width'), ['1200', '1200']);
+    assert.deepEqual(metaContents(html, 'property', 'og:image:height'), ['630', '1200']);
+    assert.deepEqual(metaContents(html, 'property', 'og:image:type'), ['image/jpeg', 'image/jpeg']);
+    assert.equal(metaContents(html, 'property', 'og:image:alt').length, 2);
+    assert.deepEqual(metaContents(html, 'name', 'twitter:card'), ['summary_large_image']);
+    assert.deepEqual(metaContents(html, 'name', 'twitter:title'), [title]);
+    assert.deepEqual(metaContents(html, 'name', 'twitter:description'), [description]);
+    assert.deepEqual(metaContents(html, 'name', 'twitter:image'), [
+      new URL('/brand/social-preview-x.jpg', site).href,
+    ]);
+    assert.equal(metaContents(html, 'name', 'twitter:image:alt').length, 1);
+    for (const image of [...openGraphImages, ...metaContents(html, 'name', 'twitter:image')]) {
+      assert.equal(new URL(image).protocol, 'https:', `${route}: social image uses HTTPS`);
+      assert.equal(new URL(image).origin, site.origin, `${route}: social image uses site origin`);
+    }
   }
 
   for (const match of html.matchAll(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/g)) {
@@ -95,7 +172,33 @@ for (const item of search) {
     `${item.slug}: searchable page exists`,
   );
 }
+
+for (const expected of socialImages) {
+  const image = await readFile(path.join(dist, 'brand', expected.name));
+  assert.ok(image.length <= 1_000_000, `${expected.name}: no larger than 1 MB`);
+  assert.deepEqual(jpegDimensions(image), {
+    width: expected.width,
+    height: expected.height,
+  });
+}
+
+const expectedSitemap = new Set([
+  new URL('/', site).href,
+  ...search.map((item) => new URL(`/docs/${item.slug}/`, site).href),
+]);
+const sitemap = await readFile(path.join(dist, 'sitemap.xml'), 'utf8');
+const sitemapLocations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+assert.deepEqual(
+  new Set(sitemapLocations),
+  expectedSitemap,
+  'Sitemap uses the configured site origin',
+);
+const robots = await readFile(path.join(dist, 'robots.txt'), 'utf8');
+assert.ok(
+  robots.includes(`Sitemap: ${new URL('/sitemap.xml', site).href}`),
+  'robots.txt uses the configured sitemap origin',
+);
 assert.equal(failures.length, 0, failures.join('\n'));
 console.log(
-  `Validated ${pages.size} pages, ${highlightedCodeBlocks} highlighted code blocks, ${plainTextBlocks} plaintext blocks, internal links and anchors, metadata, and ${search.length} search entries.`,
+  `Validated ${pages.size} pages, ${highlightedCodeBlocks} highlighted code blocks, ${plainTextBlocks} plaintext blocks, social metadata, internal links and anchors, and ${search.length} search entries.`,
 );

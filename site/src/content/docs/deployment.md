@@ -8,16 +8,16 @@ description: 'Build and publish the static portal, then connect your own domain 
 
 ## Production configuration
 
-The site uses a static Astro build and needs no server adapter, database, runtime secret, or Cloudflare Function. The Pages project is `mochi-sdk`. Its production address is [mochi-sdk.pages.dev](https://mochi-sdk.pages.dev).
+The site uses a static Astro build and needs no server adapter, database, runtime secret, or Cloudflare Function. The Pages project remains `mochi-sdk`. Its public production address is [mochi.prabhavalabs.com](https://mochi.prabhavalabs.com/). Cloudflare also assigns the project a `mochi-sdk.pages.dev` provider hostname, but canonical links and social previews should use the official domain.
 
-| Setting           | Value                                                    |
-| ----------------- | -------------------------------------------------------- |
-| Repository root   | Repository root (leave the dashboard root field empty)   |
-| Build command     | `npm run build`                                          |
-| Output directory  | `site/dist`                                              |
-| Node.js           | 22.12 or newer; Node 24 is suitable                      |
-| Production branch | `main`                                                   |
-| Site URL          | `PUBLIC_SITE_URL`, default `https://mochi-sdk.pages.dev` |
+| Setting           | Value                                                       |
+| ----------------- | ----------------------------------------------------------- |
+| Repository root   | Repository root (leave the dashboard root field empty)      |
+| Build command     | `npm run build`                                             |
+| Output directory  | `site/dist`                                                 |
+| Node.js           | 22.12 or newer; Node 24 is suitable                         |
+| Production branch | `main`                                                      |
+| Site URL          | `PUBLIC_SITE_URL`, default `https://mochi.prabhavalabs.com` |
 
 ## Deploy from your computer
 
@@ -46,19 +46,21 @@ This repository includes CI build validation. Publishing uses the explicit deplo
 
 Do not put account IDs, API tokens, or local auth files in the public repository. Preview deployments should use a separate branch or project when validating changes before production.
 
-## Add your custom subdomain
+## Official custom domain
 
-In the Pages project, add the desired hostname under **Custom domains** and follow Cloudflare's DNS verification instructions. Domain/DNS configuration is managed by the domain owner. Set the canonical site URL to the final HTTPS address and rebuild:
+The official custom hostname is `mochi.prabhavalabs.com`. In a new Cloudflare account or replacement Pages project, add that hostname under **Custom domains** and follow Cloudflare's DNS verification instructions. Domain/DNS configuration is managed by the domain owner. Set the canonical site URL to the official HTTPS address and rebuild:
 
 ```sh
-PUBLIC_SITE_URL=https://docs.example.com npm run deploy
+PUBLIC_SITE_URL=https://mochi.prabhavalabs.com npm run deploy
 ```
 
 Use that same environment variable in a Git-connected build configuration. It controls canonical links, social image URLs, robots, and the sitemap. Do not put a trailing path into it; the site is designed for a domain root, not a subdirectory.
 
 ## Verify a deployment
 
-Check the landing page, a nested documentation URL, a missing URL, `/search-index.json`, `/sitemap.xml`, and `/robots.txt`. Verify both themes and reload after choosing another companion. Assets under `/_astro/` use content hashes and long-lived caching. Documents and the search index are not given an immutable cache rule.
+Check the landing page, a nested documentation URL, a missing URL, `/search-index.json`, `/sitemap.xml`, and `/robots.txt`. Verify both themes and reload after choosing another companion. Confirm canonical and social metadata use `https://mochi.prabhavalabs.com/`, and verify the Open Graph and X image URLs return the expected JPEGs. Assets under `/_astro/` use content hashes and long-lived caching. Documents and the search index are not given an immutable cache rule.
+
+Social platforms cache page metadata and images independently. After a metadata or artwork update, publish first, verify the public page source and image URLs, then request a fresh fetch through each platform's preview inspector or debugger. A new versioned image filename is the most predictable way to bypass an old image cache. Clients may still crop or render the same metadata differently.
 
 `public/_headers` applies MIME-sniffing, framing, referrer, and hardware-permission protections. There is no catch-all SPA rewrite, so unknown routes return the custom 404 page. Keep the build artifact free of local settings and device data.
 
