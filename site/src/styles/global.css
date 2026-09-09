@@ -908,6 +908,11 @@
   font-size: 11px;
   margin-top: 8px;
 }
+.site-footer .footer-origin {
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
 .site-footer nav {
   display: flex;
   gap: 22px;
