@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#efeee7">
+  <title>Mochi · A little company</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 44C8 1 56 1 56 44Q56 56 32 56Q8 56 8 44' fill='%23e5cba6'/%3E%3Cpath d='M24 27v6m16-6v6m-12 6q4 4 8 0' fill='none' stroke='%23282c27' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="masthead"><a href="/" class="wordmark"><span class="brand-face" aria-hidden="true">ı ı</span>mochi<span class="wordmark-dot">.</span></a><span class="masthead-note">A SMALL COMPANION, COMING TO LIFE</span><span class="edition">PLAYGROUND / 01</span></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow"><span class="live-dot"></span> SAY HELLO TO YOUR LITTLE FRIEND</p><h1>A little company.<br><span>A lot of personality.</span></h1></div><p class="intro-note">A blink, a little wave, a moment of wonder.<br>Explore all the ways Mochi comes to life.</p></section>
+    <section class="playground" aria-label="Mochi animation playground">
+      <div class="preview-column">
+        <div class="device" id="device">
+          <div class="screen-heading"><span><span class="status-dot"></span> MOCHI</span><button id="fullscreen" class="icon-button" aria-label="Enter fullscreen" title="Fullscreen">⛶</button></div>
+          <canvas id="mascot" aria-label="Mochi in the Idle state. Tap to blink or swipe to change state." tabindex="0"></canvas>
+          <div class="screen-caption" aria-live="polite"><span id="screen-state">Idle</span><span id="screen-detail">Just happy to be here.</span></div>
+          <div class="screen-nav"><button id="previous" aria-label="Previous state">←</button><button id="choose" aria-expanded="false" aria-controls="screen-picker"><span class="grid-icon" aria-hidden="true">⊞</span> Choose a mood <span id="state-count">01 / 10</span></button><button id="next" aria-label="Next state">→</button></div>
+          <div class="screen-picker" id="screen-picker" hidden><div class="picker-heading"><span>Pick a little feeling</span><button id="close-picker" aria-label="Close mood picker">×</button></div><div id="screen-moods" class="screen-moods"></div></div>
+        </div>
+        <div class="preview-footnote"><span>Tap Mochi to blink</span><span class="footnote-dot">·</span><span>Swipe to change moods</span><span class="keyboard-note">← → also work</span></div>
+      </div>
+      <aside class="controls">
+        <div class="section-heading"><div><p class="eyebrow">THE EXPRESSION COLLECTION</p><h2>How’s Mochi feeling?</h2></div><span class="count-badge">10</span></div>
+        <div id="moods" class="moods" role="group" aria-label="Character states"></div>
+        <div class="motion-controls"><div class="motion-heading"><span>Make yourself comfortable</span><button id="play" class="text-button" aria-pressed="false">Ⅱ Pause</button></div><label class="speed-label" for="speed"><span>Animation pace</span><output id="speed-value">1×</output></label><input id="speed" type="range" min="0.5" max="1.5" step="0.1" value="1"><div class="range-labels"><span>Dreamy</span><span>Energetic</span></div><label class="tour-row" for="tour"><span><strong>A little mood tour</strong><small>Visit every expression, one by one.</small></span><input type="checkbox" id="tour" role="switch"><span class="switch" aria-hidden="true"></span></label></div>
+        <p class="control-note">Same little Mochi. Ten ways to say hello.</p>
+      </aside>
+    </section>
+  </main>
+  <footer><span>Made for moments, big and small.</span><span>MOCHI BUDDY <span class="footer-star">✳</span> INTERACTIVE MOTION STUDY</span></footer>
+</body>
+</html>

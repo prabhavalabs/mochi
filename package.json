@@ -1,0 +1,21 @@
+{
+  "name": "mochi-playground",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "check": "node --check web/app.js && node --check web/mochi.js && node --check scripts/serve.mjs",
+    "test:sdk": "python3 scripts/test-sdk.py",
+    "test:web": "node --test tests/server.test.mjs"
+  },
+  "license": "MIT",
+  "description": "Offline mascot playground and portable C++ animation SDK",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prabhavalabs/mochi.git"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Mochi",
+  "version": "0.2.0",
+  "description": "Portable C++17 animated companion: poses, playback, RGB565 rendering and touch gestures.",
+  "keywords": [
+    "animation",
+    "mascot",
+    "graphics",
+    "rgb565"
+  ],
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "srcDir": "src"
+  },
+  "export": {
+    "include": [
+      "src",
+      "examples",
+      "tests",
+      "CMakeLists.txt",
+      "README.md",
+      "library.json",
+      "LICENSE"
+    ]
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/prabhavalabs/mochi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prabhavalabs/mochi.git"
+  }
+}

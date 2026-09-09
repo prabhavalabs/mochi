@@ -1,0 +1,28 @@
+# Local build output
+.pio/
+build/
+output/
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.ppm
+
+# Credentials and device backups
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.bin
+*.elf
+*.map
+*.dump
+*.log
+
+# Operating system metadata
+.DS_Store
+._*
+Thumbs.db
