@@ -177,7 +177,6 @@ export default function Playground() {
           paused={paused}
           speed={speed}
           tour={tour}
-          reduced={reduced}
           ready={ready}
           view={deviceView}
           onViewChange={setDeviceView}

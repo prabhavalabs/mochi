@@ -262,33 +262,11 @@
   margin: 0 auto 5px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   color: var(--muted-foreground);
   font-size: 10px;
   letter-spacing: 0.025em;
 }
-.device-view-toggle {
-  padding: 2px;
-  background: var(--secondary);
-  border: 1px solid var(--border);
-}
-.device-view-toggle > button {
-  min-width: 43px;
-  height: 28px;
-  padding: 0 9px;
-  border-radius: 5px;
-  font-size: 10px;
-  color: var(--muted-foreground);
-}
-.device-view-toggle > button[data-state='on'] {
-  background: var(--background);
-  color: var(--foreground);
-  box-shadow: 0 1px 4px #1b23151b;
-}
 .device-scene {
-  perspective: 1100px;
-  perspective-origin: 50% 40%;
   padding: 22px 0 58px;
 }
 .device-assembly {
@@ -296,14 +274,7 @@
   aspect-ratio: 1;
   margin-inline: auto;
   position: relative;
-  transform-style: preserve-3d;
-  transform: rotateX(var(--device-rotate-x)) rotateY(var(--device-rotate-y));
-  transition: transform 180ms ease-out;
-  will-change: transform;
-}
-.device-scene:focus-within .device-assembly,
-.device-scene[data-view='front'] .device-assembly {
-  transform: rotateX(0deg) rotateY(0deg);
+  isolation: isolate;
 }
 .device-body {
   position: absolute;
@@ -315,7 +286,6 @@
     0 12px 22px -20px #403a2e80,
     inset 2px 2px 2px #ffffff,
     inset -4px -5px 8px #bfb6a96b;
-  transform-style: preserve-3d;
 }
 .device-body::before {
   content: '';
@@ -324,7 +294,6 @@
   z-index: -1;
   border-radius: 80px;
   background: linear-gradient(145deg, #e8e2d8, #c9c0b3);
-  transform: translateZ(-18px);
   box-shadow: 0 15px 25px -18px #2d2a246e;
 }
 .device-body::after {
@@ -334,7 +303,6 @@
   border: 1px solid #ffffffad;
   border-radius: 72px;
   pointer-events: none;
-  transform: translateZ(3px);
 }
 .device-face {
   position: absolute;
@@ -345,7 +313,6 @@
   box-shadow:
     inset 0 2px 4px #a99f9180,
     0 1px 1px #ffffff;
-  transform: translateZ(5px);
 }
 .device-screen {
   --device-accent: #c6d9a8;
@@ -640,7 +607,6 @@
   width: 58%;
   display: flex;
   justify-content: space-between;
-  transform: translateZ(-2px);
 }
 .device-top-buttons button {
   width: 47px;
@@ -673,7 +639,7 @@
 }
 .device-usb {
   position: absolute;
-  z-index: -1;
+  z-index: -2;
   bottom: -55px;
   left: 50%;
   width: 62px;
@@ -681,7 +647,7 @@
   border-radius: 8px 8px 6px 6px;
   background: linear-gradient(90deg, #d1c9bd, #f7f3eb 18%, #eee9df 82%, #bdb5a9);
   box-shadow: 0 10px 14px -13px #29251e;
-  transform: translateX(-50%) translateZ(-12px);
+  transform: translateX(-50%);
 }
 .device-usb span {
   position: absolute;
@@ -1539,10 +1505,6 @@
   .device-preview-meta {
     min-height: 44px;
     margin-bottom: 4px;
-  }
-  .device-view-toggle > button {
-    min-width: 48px;
-    height: 40px;
   }
   .device-scene {
     padding-top: 24px;

@@ -189,7 +189,7 @@ export class Mochi {
   }
   resize() {
     const box = this.canvas.getBoundingClientRect();
-    // CSS 3D transforms alter the bounding rectangle, not the canvas's logical layout size.
+    // Decorative transforms can alter the bounding rectangle, not the canvas's logical layout size.
     this.width = this.canvas.clientWidth || box.width;
     this.height = this.canvas.clientHeight || box.height;
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);

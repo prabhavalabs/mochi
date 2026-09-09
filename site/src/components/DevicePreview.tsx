@@ -1,14 +1,6 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type PointerEvent,
-  type RefObject,
-} from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, X } from 'lucide-react';
 import { Button } from './ui/button';
-import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 import CharacterIcon from './CharacterIcon';
 import { characters, characterById } from '@/lib/characters';
 import { STATES } from '@/lib/animation';
@@ -21,7 +13,6 @@ type DevicePreviewProps = {
   paused: boolean;
   speed: number;
   tour: boolean;
-  reduced: boolean;
   ready: boolean;
   view: DeviceView;
   onViewChange: (view: DeviceView) => void;
@@ -33,11 +24,6 @@ type DevicePreviewProps = {
   onBlink: () => void;
 };
 
-type TiltStyle = CSSProperties & {
-  '--device-rotate-x': string;
-  '--device-rotate-y': string;
-};
-
 export default function DevicePreview({
   canvas,
   character,
@@ -45,7 +31,6 @@ export default function DevicePreview({
   paused,
   speed,
   tour,
-  reduced,
   ready,
   view,
   onViewChange,
@@ -58,18 +43,10 @@ export default function DevicePreview({
 }: DevicePreviewProps) {
   const c = characterById(character);
   const detail = STATES.find((candidate) => candidate.id === state) ?? STATES[0];
-  const [perspective, setPerspective] = useState<'three-d' | 'front'>('three-d');
-  const [tilt, setTilt] = useState({ x: 1.5, y: -2.5 });
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const opener = useRef<HTMLButtonElement | null>(null);
   const characterFocus = useRef<HTMLButtonElement | null>(null);
   const moodFocus = useRef<HTMLButtonElement | null>(null);
-
-  const tilted = perspective === 'three-d' && !reduced && view === 'stage';
-  const style: TiltStyle = {
-    '--device-rotate-x': `${tilted ? tilt.x : 0}deg`,
-    '--device-rotate-y': `${tilted ? tilt.y : 0}deg`,
-  };
 
   useEffect(() => {
     if (view === 'stage') return;
@@ -104,45 +81,12 @@ export default function DevicePreview({
     if (view !== 'stage') onViewChange('stage');
   };
 
-  const onTilt = (event: PointerEvent<HTMLDivElement>) => {
-    if (!tilted || event.pointerType !== 'mouse') return;
-    const box = event.currentTarget.getBoundingClientRect();
-    const x = (event.clientX - box.left) / box.width - 0.5;
-    const y = (event.clientY - box.top) / box.height - 0.5;
-    setTilt({ x: -y * 5, y: x * 7 });
-  };
-
   return (
     <div className="device-preview-wrap" id="playground">
       <div className="device-preview-meta">
         <span>Interactive touchscreen</span>
-        <ToggleGroup
-          type="single"
-          value={perspective}
-          onValueChange={(value) => {
-            if (value === 'three-d' || value === 'front') setPerspective(value);
-          }}
-          aria-label="Device view"
-          spacing={1}
-          className="device-view-toggle"
-        >
-          <ToggleGroupItem value="three-d" aria-label="Show 3D device view">
-            3D
-          </ToggleGroupItem>
-          <ToggleGroupItem value="front" aria-label="Show front device view">
-            Front
-          </ToggleGroupItem>
-        </ToggleGroup>
       </div>
-      <div
-        className="device-scene"
-        data-view={perspective}
-        style={style}
-        onPointerMove={onTilt}
-        onPointerLeave={() => {
-          if (tilted) setTilt({ x: 1.5, y: -2.5 });
-        }}
-      >
+      <div className="device-scene">
         <div className="device-assembly">
           <div className="device-top-buttons" role="group" aria-label="Physical device controls">
             <button type="button" onClick={() => stepWithPhysicalButton('next')} title="Next mood">
